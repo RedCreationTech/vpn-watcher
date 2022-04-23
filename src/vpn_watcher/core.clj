@@ -59,9 +59,6 @@
   ([host port]
    (service-available? host port 200)))
 
-
-
-
 (defn find-switch [driver]
   (let [item-col (web/query
                   driver
@@ -70,11 +67,10 @@
                    :fn/has-string "iPad-pro-2"}) ]
     (web/child driver item-col {:tag :a})))
 
-
-
 (defn restart-router []
-  (doto @(def b (web/chrome {:headless true}))
-    (web/go "http://router.asus.comg/Main_Login.asp")
+  (debug "restarting now....")
+  (doto @(def b (web/chrome {:headless false}))
+    (web/go "http://router.asus.com/Main_Login.asp")
     (web/wait-visible {:id "login_username"})
     (web/fill {:id "login_username"} "redcreation")
     (web/fill {:name "login_passwd"}  "hczt1234")
@@ -82,8 +78,9 @@
     (web/wait-visible {:tag :span :fn/has-text "重新启动"})
     (web/click {:tag :span :fn/has-text "重新启动"})
     (web/wait-has-alert)
-    (web/accept-alert)))
-
+    (web/accept-alert)
+    (web/wait (* 2 60))
+    (web/quit)))
 
 (defn connected-to-vpn-router? []
   (service-available? "router.asus.com" 80))
@@ -91,12 +88,17 @@
 (defn google-reachable? []
   (service-available? "google.com" 80))
 
-
+(defn check-every-10-minutes []
+  (debug "checking router and vpn...")
+  (while true
+    (if (and (connected-to-vpn-router?)
+             (not (google-reachable?)))
+      (restart-router)
+      (warn "no need to restart router now...."))
+    (Thread/sleep (* 1000 60 10))))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (if (and (connected-to-vpn-router?)
-           (not (google-reachable?)))
-    (restart-router)
-    (warn "no need to restart router now....")))
+  (check-every-10-minutes)
+  )
