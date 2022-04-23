@@ -86,7 +86,7 @@
 
 
 (defn connected-to-vpn-router? []
-  (service-available? "router.asus.comg" 80))
+  (service-available? "router.asus.com" 80))
 
 (defn google-reachable? []
   (service-available? "google.com" 80))
@@ -98,5 +98,5 @@
   [& args]
   (if (and (connected-to-vpn-router?)
            (not (google-reachable?)))
-    restart-router
-    (warn "cat not access host")))
+    (restart-router)
+    (warn "no need to restart router now....")))
